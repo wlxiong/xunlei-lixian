@@ -2,6 +2,7 @@
 __all__ = ['Console']
 
 import sys
+import errno
 
 styles = [
 	'black',
@@ -40,7 +41,13 @@ class Console:
 	def __call__(self, s):
 		self.write(s)
 	def write(self, s):
-		self.output.write(s)
+		try:
+			self.output.write(s)
+		except IOError as e:
+			if e.errno == errno.EPIPE:
+				sys.exit(141)
+			else:
+				raise
 	def flush(self, *args):
 		self.output.flush(*args)
 
