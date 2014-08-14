@@ -2,6 +2,7 @@
 __all__ = ['query', 'bt_query', 'user_query', 'Query', 'ExactQuery', 'SearchQuery',
            'build_query', 'find_tasks_to_download', 'search_tasks', 'expand_bt_sub_tasks']
 
+import itertools
 import lixian_hash_bt
 import lixian_hash_ed2k
 import lixian_encoding
@@ -142,11 +143,12 @@ class TaskBase(object):
 
 	def merge_results(self):
 		tasks = merge_tasks(self.download_jobs)
-		for t in tasks:
+		def set_base(t):
 			if t['type'] == 'bt':
 				# XXX: a dirty trick to cache requests
 				t['base'] = self
-		self.download_jobs = tasks
+			return t
+		self.download_jobs = itertools.imap(set_base, tasks)
 
 	def query_once(self):
 		self.prepare()
@@ -157,8 +159,8 @@ class TaskBase(object):
 		self.merge_results()
 
 	def query_search(self):
-		for query in self.queries:
-			self.download_jobs += query.query_search()
+		query_results = itertools.imap(lambda query: query.query_search(), self.queries)
+		self.download_jobs = itertools.chain.from_iterable(query_results)
 		self.merge_results()
 
 	def peek_download_jobs(self):
@@ -331,7 +333,6 @@ def merge_files(files1, files2):
 	return files
 
 def merge_tasks(tasks):
-	result_tasks = []
 	task_mapping = {}
 	for task in tasks:
 		assert type(task) == dict, repr(type)
@@ -343,12 +344,11 @@ def merge_tasks(tasks):
 		else:
 			if 'files' in task:
 				t = dict(task)
-				result_tasks.append(t)
+				yield t
 				task_mapping[id] = t
 			else:
-				result_tasks.append(task)
+				yield task
 				task_mapping[id] = task
-	return result_tasks
 
 class AllQuery(SearchQuery):
 	def __init__(self, base):
