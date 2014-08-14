@@ -49,5 +49,10 @@ class Console:
 			else:
 				raise
 	def flush(self, *args):
-		self.output.flush(*args)
-
+		try:
+			self.output.flush(*args)
+		except IOError as e:
+			if e.errno == errno.EPIPE:
+				sys.exit(141)
+			else:
+				raise

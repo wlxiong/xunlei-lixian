@@ -40,6 +40,7 @@ class ScopedColors(console_type):
 				softspace = get_softspace(sys.stdout)
 				sys.stdout = console
 				sys.stdout.softspace = softspace
+				return console
 			def __exit__(self, type, value, traceback):
 				softspace = get_softspace(sys.stdout)
 				sys.stdout = self.stdout

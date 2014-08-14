@@ -69,7 +69,7 @@ def output_tasks(tasks, columns, args, top=True):
 		'failed':'red',
 		}
 		c = status_colors[t['status_text']]
-		with colors(args.colors).ansi(c)():
+		with colors(args.colors).ansi(c)() as output:
 			for k in columns:
 				if k == 'n':
 					if top:
@@ -104,6 +104,7 @@ def output_tasks(tasks, columns, args, top=True):
 				else:
 					raise NotImplementedError(k)
 			print
+			output.flush()
 
 def usage(doc=lixian_help.usage, message=None):
 	if hasattr(doc, '__call__'):
